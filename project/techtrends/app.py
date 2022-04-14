@@ -1,6 +1,7 @@
 import sqlite3
 
 from flask import Flask, jsonify, json, render_template, request, url_for, redirect, flash
+from os import environ
 from werkzeug.exceptions import abort
 
 # Function to get a database connection.
@@ -20,7 +21,7 @@ def get_post(post_id):
 
 # Define the Flask application
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your secret key'
+app.config['SECRET_KEY'] = environ.get('SECRET_KEY')
 
 # Define the main route of the web application 
 @app.route('/')
@@ -65,6 +66,12 @@ def create():
 
     return render_template('create.html')
 
+
+@app.route('/healthz', methods=('GET'))
+def health():
+    return jsonify({'result': 'OK - healthy'}), 200
+
 # start the application on port 3111
 if __name__ == "__main__":
+
    app.run(host='0.0.0.0', port='3111')
