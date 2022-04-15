@@ -3,7 +3,7 @@
 .vagrant/
 .myvenv/
 __pycache__/
-.vagrant/
 .flaskenv
 .idea
 .env
+database.db
