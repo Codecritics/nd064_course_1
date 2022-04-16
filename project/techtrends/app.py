@@ -1,7 +1,10 @@
 import sqlite3
 import logging
+from datetime import datetime
+from logging.config import dictConfig
+from time import sleep
 
-from flask import Flask, jsonify, json, render_template, request, url_for, redirect, flash
+from flask import Flask, jsonify, json, render_template, request, url_for, redirect, flash, Response
 from os import environ
 
 from flask.logging import default_handler
@@ -11,17 +14,7 @@ from werkzeug.serving import WSGIRequestHandler
 from werkzeug.urls import uri_to_iri
 
 NUMBER_OF_SQLITE_CONNECTIONS = 0
-
-
-def log_(log_message):
-    log = logging.getLogger("app")
-    log.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler()
-    log.addHandler(console_handler)
-
-    log_format = f'%(levelname)s:%(name)s: %(asctime)s, %(message)s'
-    log.info(log_message)
-    console_handler.setFormatter(logging.Formatter(log_format))
+time = datetime.now().strftime('%d/%m/%Y, %H:%M:%S')
 
 
 def custom_log_request(self, code="-", size="-"):
@@ -32,8 +25,8 @@ def custom_log_request(self, code="-", size="-"):
         msg = self.requestline
     code = str(code)
     logging_level = logging.getLevelName(werkzeug_logger.level)
-    werkzeug_logger.info('%s:%s:%s - - [%s] "%s" %s %s' % (
-    logging_level, werkzeug_logger.name, self.address_string(), self.log_date_time_string(), msg, code, size))
+    werkzeug_logger.info(
+        '%s - - [%s] "%s" %s %s' % (self.address_string(), self.log_date_time_string(), msg, code, size))
 
 
 # Function to get a database connection.
@@ -63,6 +56,8 @@ def get_post(post_id):
 # Define the Flask application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = environ.get('SECRET_KEY')
+
+logging.basicConfig(level=logging.DEBUG, format=f'%(levelname)s:%(name)s:%(message)s', datefmt='%Y/%m/%d, %H:%M:%S')
 werkzeug_logger = logging.getLogger("werkzeug")
 werkzeug_logger.setLevel(logging.DEBUG)
 WSGIRequestHandler.log_request = custom_log_request
@@ -78,6 +73,7 @@ def index():
     connection.close()
     NUMBER_OF_SQLITE_CONNECTIONS = NUMBER_OF_SQLITE_CONNECTIONS - 1 if NUMBER_OF_SQLITE_CONNECTIONS > 0 \
         else NUMBER_OF_SQLITE_CONNECTIONS
+
     return render_template('index.html', posts=posts)
 
 
@@ -86,16 +82,34 @@ def index():
 @app.route('/<int:post_id>')
 def post(post_id):
     post = get_post(post_id)
+
     if post is None:
-        return render_template('404.html'), 404
+        response = Response(render_template('404.html'), 404)
     else:
-        return render_template('post.html', post=post)
+        response = Response(render_template('post.html', post=post))
+
+    @response.call_on_close
+    def on_close():
+        sleep(1)
+        if post is None:
+            app.logger.info(f' {time} A non-existing article is accessed')
+        else:
+            app.logger.info(f' {time} Article "{post["content"]}" retrieved!')
+
+    return response
 
 
 # Define the About Us page
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    response = Response(render_template('about.html'))
+
+    @response.call_on_close
+    def on_close():
+        sleep(1)
+        app.logger.info(f'{time} The "About Us" page is retrieved')
+
+    return response
 
 
 # Define the post creation functionality
@@ -114,9 +128,16 @@ def create():
             connection.commit()
             connection.close()
 
-            return redirect(url_for('index'))
+            response = Response(redirect(url_for('index')))
 
-    return render_template('create.html')
+    response = Response(render_template('create.html'))
+
+    @response.call_on_close
+    def on_close():
+        sleep(1)
+        app.logger.info(f'{time} A new article is created. With title {title}')
+
+    return response
 
 
 @app.route('/healthz', methods=('GET',))
