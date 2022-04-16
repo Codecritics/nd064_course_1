@@ -1,15 +1,10 @@
-import sqlite3
 import logging
+import sqlite3
 from datetime import datetime
-from logging.config import dictConfig
+from os import environ
 from time import sleep
 
-from flask import Flask, jsonify, json, render_template, request, url_for, redirect, flash, Response
-from os import environ
-
-from flask.logging import default_handler
-from werkzeug.exceptions import abort
-
+from flask import Flask, jsonify, render_template, request, url_for, redirect, flash, Response
 from werkzeug.serving import WSGIRequestHandler
 from werkzeug.urls import uri_to_iri
 
