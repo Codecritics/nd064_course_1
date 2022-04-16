@@ -3,26 +3,37 @@ import logging
 
 from flask import Flask, jsonify, json, render_template, request, url_for, redirect, flash
 from os import environ
+
+from flask.logging import default_handler
 from werkzeug.exceptions import abort
+
+from werkzeug.serving import WSGIRequestHandler
+from werkzeug.urls import uri_to_iri
 
 NUMBER_OF_SQLITE_CONNECTIONS = 0
 
 
-def log(type: str, hostname=None):
-    log = logging.getLogger(type)
+def log_(log_message):
+    log = logging.getLogger("app")
     log.setLevel(logging.DEBUG)
     console_handler = logging.StreamHandler()
-
-    if type == "werkzeug":
-        log_format = f'%(levelname)s:%(name)s: %(asctime)s | : %(message)s'
-        log_msg = ""
-    else:
-        log_format = f'%(levelname)s:%(name)s: %(asctime)s | : %(message)s'
-        log_msg = ""
-
-    console_handler.setFormatter(logging.Formatter(log_format))
     log.addHandler(console_handler)
-    log.info('test')
+
+    log_format = f'%(levelname)s:%(name)s: %(asctime)s, %(message)s'
+    log.info(log_message)
+    console_handler.setFormatter(logging.Formatter(log_format))
+
+
+def custom_log_request(self, code="-", size="-"):
+    try:
+        path = uri_to_iri(self.path)
+        msg = "%s %s %s" % (self.command, path, self.request_version)
+    except AttributeError:
+        msg = self.requestline
+    code = str(code)
+    logging_level = logging.getLevelName(werkzeug_logger.level)
+    werkzeug_logger.info('%s:%s:%s - - [%s] "%s" %s %s' % (
+    logging_level, werkzeug_logger.name, self.address_string(), self.log_date_time_string(), msg, code, size))
 
 
 # Function to get a database connection.
@@ -52,8 +63,9 @@ def get_post(post_id):
 # Define the Flask application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = environ.get('SECRET_KEY')
-log = logging.getLogger("werkzeug")
-log.disabled = True
+werkzeug_logger = logging.getLogger("werkzeug")
+werkzeug_logger.setLevel(logging.DEBUG)
+WSGIRequestHandler.log_request = custom_log_request
 
 
 # Define the main route of the web application
