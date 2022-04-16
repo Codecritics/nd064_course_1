@@ -19,7 +19,6 @@ def custom_log_request(self, code="-", size="-"):
     except AttributeError:
         msg = self.requestline
     code = str(code)
-    logging_level = logging.getLevelName(werkzeug_logger.level)
     werkzeug_logger.info(
         '%s - - [%s] "%s" %s %s' % (self.address_string(), self.log_date_time_string(), msg, code, size))
 
