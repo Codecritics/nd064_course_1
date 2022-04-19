@@ -19,4 +19,13 @@ INFO:werkzeug: * Running on all addresses (0.0.0.0)
    WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:3111
  * Running on http://172.17.0.2:3111 (Press CTRL+C to quit)
+INFO:werkzeug:172.17.0.1 - - [19/Apr/2022 08:39:43] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:172.17.0.1 - - [19/Apr/2022 08:39:43] "GET /static/css/main.css HTTP/1.1" 200 -
+INFO:werkzeug:172.17.0.1 - - [19/Apr/2022 08:39:43] "GET /favicon.ico HTTP/1.1" 404 -
+INFO:werkzeug:172.17.0.1 - - [19/Apr/2022 08:40:21] "GET /about HTTP/1.1" 200 -
+INFO:app:19/04/2022, 08:38:30 The "About Us" page is retrieved
+INFO:werkzeug:172.17.0.1 - - [19/Apr/2022 08:40:34] "GET /1 HTTP/1.1" 200 -
+INFO:app: 19/04/2022, 08:38:30 Article "The Cloud Native Computing Foundation (CNCF) annual report for 2020 is now available. The report highlights the growth of the community, events, projects, and more, over the past year." retrieved!
+INFO:werkzeug:172.17.0.1 - - [19/Apr/2022 08:40:56] "GET /metrics HTTP/1.1" 200 -
+
 
