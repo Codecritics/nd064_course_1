@@ -1,5 +1,6 @@
 import logging
 import sqlite3
+import sys
 from os import environ
 from flask_session import Session
 
@@ -29,11 +30,6 @@ def get_post(post_id):
     connection = get_db_connection()
     post = connection.execute("SELECT * FROM posts WHERE id = ?", (post_id,)).fetchone()
     connection.close()
-    app.config["DB_CONN_COUNTER"] = (
-        app.config["DB_CONN_COUNTER"] - 1
-        if app.config["DB_CONN_COUNTER"] > 0
-        else app.config["DB_CONN_COUNTER"]
-    )
     return post
 
 
@@ -51,11 +47,6 @@ def index():
     connection = get_db_connection()
     posts = connection.execute("SELECT * FROM posts").fetchall()
     connection.close()
-    app.config["DB_CONN_COUNTER"] = (
-        app.config["DB_CONN_COUNTER"] - 1
-        if app.config["DB_CONN_COUNTER"] > 0
-        else app.config["DB_CONN_COUNTER"]
-    )
 
     return render_template("index.html", posts=posts)
 
@@ -144,6 +135,7 @@ def metrics():
 # start the application on port 3111
 if __name__ == "__main__":
     logging.basicConfig(
+        stream=sys.stdout,
         level=logging.DEBUG,
         format=f"%(levelname)s:%(name)s: %(asctime)s %(message)s ",
         datefmt="%Y/%m/%d, %H:%M:%S",
